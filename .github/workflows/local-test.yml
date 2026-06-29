@@ -32,7 +32,7 @@ jobs:
         run: npx.cmd playwright install chromium
 
       - name: Check PHP syntax
-        shell: powershell
+        shell: pwsh
         run: |
           $failed = $false
           Get-ChildItem -Recurse -Filter *.php | ForEach-Object {
@@ -53,5 +53,6 @@ jobs:
             playwright-report/
             test-results/
           if-no-files-found: ignore
+
 
 
