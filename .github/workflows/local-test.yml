@@ -1,0 +1,56 @@
+name: Local WordPress tests
+
+on:
+  push:
+    branches:
+      - 'agent/**'
+  workflow_dispatch:
+
+concurrency:
+  group: local-wordpress-test
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: [self-hosted, Windows, X64, wordpress-test]
+    timeout-minutes: 20
+    env:
+      TEST_BASE_URL: ${{ vars.TEST_BASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install test dependencies
+        run: npm.cmd ci
+
+      - name: Install Chromium
+        run: npx.cmd playwright install chromium
+
+      - name: Check PHP syntax
+        shell: pwsh
+        run: |
+          $failed = $false
+          Get-ChildItem -Recurse -Filter *.php | ForEach-Object {
+            php -l $_.FullName
+            if ($LASTEXITCODE -ne 0) { $failed = $true }
+          }
+          if ($failed) { exit 1 }
+
+      - name: Run browser smoke tests
+        run: npm.cmd test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+
