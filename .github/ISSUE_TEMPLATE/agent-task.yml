@@ -1,0 +1,53 @@
+name: Agent 开发任务
+description: 提交给服务器 Cursor Agent 开发、测试和生成 Pull Request
+title: "[Agent] "
+labels: ["workflow:agent"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: 目标
+      description: 用一两句话说明要解决什么问题，以及谁会使用它。
+      placeholder: 为访客提供 Token 中转站排行榜，方便比较价格、稳定性和支持模型。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 页面与功能
+      description: 列出页面、操作和需要展示的数据。
+      placeholder: |
+        - 排行榜：展示前 20 名
+        - 详情页：价格、模型、稳定性、更新时间
+        - 点击排行榜条目进入详情页
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 写出你看到什么结果时会认为任务完成。
+      placeholder: |
+        - 手机和桌面均可正常显示
+        - 空数据有明确提示
+        - 页面没有参考网站的品牌和 Logo
+    validations:
+      required: true
+  - type: textarea
+    id: exclusions
+    attributes:
+      label: 不做什么
+      description: 明确本次任务边界，避免 Agent 自行扩大范围。
+      placeholder: 暂不开发注册、支付和后台数据采集。
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考资料
+      description: 可填写参考链接、接口文档、截图说明或补充约束。
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 提交确认
+      options:
+        - label: 我已经检查目标和验收标准，允许 Agent 修改代码并部署到测试站。
+          required: true

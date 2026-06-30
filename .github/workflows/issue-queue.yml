@@ -1,0 +1,20 @@
+name: Queue agent issue
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  acknowledge:
+    if: github.event.label.name == 'workflow:agent'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Acknowledge task
+        run: |
+          gh issue edit "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --add-label "status:queued"
+          gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --body "📥 任务已进入服务器 Cursor Agent 队列。通常会在 0–5 分钟内领取；开发完成后会自动部署测试站、运行本地测试并创建 Pull Request。"
