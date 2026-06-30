@@ -1,5 +1,10 @@
 name: Local WordPress tests
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -16,6 +21,7 @@ jobs:
     timeout-minutes: 20
     env:
       TEST_BASE_URL: ${{ vars.TEST_BASE_URL }}
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +59,31 @@ jobs:
             playwright-report/
             test-results/
           if-no-files-found: ignore
+
+      - name: Publish successful result
+        if: success() && startsWith(github.ref_name, 'agent/issue-')
+        shell: pwsh
+        run: |
+          $issue = '${{ github.ref_name }}' -replace '^agent/issue-', ''
+          if ($issue -notmatch '^\d+$') { throw 'Invalid agent branch name' }
+          $title = gh issue view $issue --repo '${{ github.repository }}' --json title --jq '.title'
+          $pr = gh pr list --repo '${{ github.repository }}' --head '${{ github.ref_name }}' --json url --jq '.[0].url'
+          if (-not $pr) {
+            $pr = gh pr create --repo '${{ github.repository }}' --base master --head '${{ github.ref_name }}' `
+              --title "Issue #${issue}: $title" `
+              --body "Closes #${issue}`n`n本地 PHP 与 Playwright 测试已通过。`n`n测试站：${{ vars.TEST_BASE_URL }}`nWorkflow：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          gh issue edit $issue --repo '${{ github.repository }}' --remove-label 'workflow:agent' --add-label 'status:review'
+          gh issue comment $issue --repo '${{ github.repository }}' --body "✅ 开发完成，本地测试通过。`n`n- 测试站：${{ vars.TEST_BASE_URL }}`n- Pull Request：$pr`n- 测试记录：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Publish failed result
+        if: failure() && startsWith(github.ref_name, 'agent/issue-')
+        shell: pwsh
+        run: |
+          $issue = '${{ github.ref_name }}' -replace '^agent/issue-', ''
+          if ($issue -notmatch '^\d+$') { exit 0 }
+          gh issue edit $issue --repo '${{ github.repository }}' --add-label 'status:test-failed'
+          gh issue comment $issue --repo '${{ github.repository }}' --body "❌ 本地测试失败。`n`n查看日志与测试附件：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 
 
