@@ -73,7 +73,9 @@ test.describe('lzzen-relay pages', () => {
     await expect(page.locator('[data-testid="relay-score-panel"]')).toBeVisible();
     await expect(page.locator('[data-testid="relay-history-section"]')).toBeVisible();
     await expect(page.getByRole('heading', { name: /vip\.j3gb\.com 中转站测评/i })).toBeVisible();
-    await expect(page.getByText('82')).toBeVisible();
+    await expect(
+      page.getByTestId('relay-score-panel').getByText('82', { exact: true })
+    ).toBeVisible();
   });
 
   test('listing links to relay detail page', async ({ page }) => {
