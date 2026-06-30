@@ -73,7 +73,14 @@ jobs:
               --title "Issue #${issue}: $title" `
               --body "Closes #${issue}`n`n本地 PHP 与 Playwright 测试已通过。`n`n测试站：${{ vars.TEST_BASE_URL }}`nWorkflow：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }
-          gh issue edit $issue --repo '${{ github.repository }}' --remove-label 'workflow:agent' --add-label 'status:review'
+          $labels = gh issue view $issue --repo '${{ github.repository }}' --json labels --jq '.labels[].name'
+          if ($labels -contains 'workflow:agent') {
+            gh issue edit $issue --repo '${{ github.repository }}' --remove-label 'workflow:agent'
+          }
+          if ($labels -contains 'status:test-failed') {
+            gh issue edit $issue --repo '${{ github.repository }}' --remove-label 'status:test-failed'
+          }
+          gh issue edit $issue --repo '${{ github.repository }}' --add-label 'status:review'
           gh issue comment $issue --repo '${{ github.repository }}' --body "✅ 开发完成，本地测试通过。`n`n- 测试站：${{ vars.TEST_BASE_URL }}`n- Pull Request：$pr`n- 测试记录：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Publish failed result
